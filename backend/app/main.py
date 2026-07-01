@@ -101,6 +101,20 @@ async def health() -> dict[str, str]:
     return {"status": "ok", "version": "2.0.0"}
 
 
+@app.post("/api/v1/hash-face")
+async def hash_face(image: UploadFile = File(...)) -> dict[str, Any]:
+    """Generate face hash from an uploaded image without touching the registry.
+
+    The frontend calls this first, then uses MetaMask to sign the on-chain
+    registration directly — the backend never handles private keys.
+    """
+    image_bytes = await image.read()
+    if not image_bytes:
+        raise InvalidImageError("Uploaded file is empty.")
+    result = generate_face_hash(image_bytes)
+    return {"face_hash": result["face_hash"], "embedding": result["embedding"]}
+
+
 # ---------------------------------------------------------------------------
 # Face registration — Task 1 + blockchain (Task 2)
 # ---------------------------------------------------------------------------
